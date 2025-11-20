@@ -1,0 +1,35 @@
+# Environment variables
+.env
+
+# Logs
+*.log
+logs/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE and editor files
+.ipynb_checkpoints/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database files (если они генерируются автоматически)
+*.sqlite
+*.db
+
+# Specific files to ignore
+direct_test.py
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
