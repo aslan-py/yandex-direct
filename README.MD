@@ -13,29 +13,23 @@ Direct Checker Bot - Telegram бот для автоматической про�
 
 🗂️ Управление базой данных токенов
 
-## Клонирование репозитория:
-- Устанавливаем Visual Code
-- Ставим puthon 3.12
-- Создаем папку  и заходим в неё с помощью Visual Studio
-- Запускаем терминал 
-
+## Как пользоваться чайнику:
+- Устанавливаем Visual Code https://code.visualstudio.com/Download
+- Ставим python 3.12 https://www.python.org/downloads/release/python-3127/
+- ставим git bash(командная строка) https://gitforwindows.org/
+- Создаем папку где удобно и заходим в неё с помощью Visual Studio
+- Запускаем терминал и копируем скрипт с репозитория GIT HUB
 
 ```bash
 git clone  git@github.com:aslan-py/yandex-direct.git
 
 ```
 
-## Для использования необходима авторизация:
-- Добавление аккаунтов Яндекс.Директ через OAuth
-- Запуск автоматической проверки всех ссылок
-- Получение отчетов о неработающих URL
-- Управление сохраненными токенами
-
 ## Установка зависимостей и запуск бэкенда
 - сначала создай .env файл по примеру файла .env.example туда нужно добавить твои  CLIENT_ID, CLIENT_SECRET, TELEGRAM_BOT_TOKEN
 ```bash
-# Переход в папку бэкенда
-cd direct
+# Переход в папку с ботом
+cd yandex-direct
 
 # Создание виртуального окружения
 python -m venv venv
