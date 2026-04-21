@@ -7,7 +7,7 @@ ENV UV_PROJECT_ENVIRONMENT="/usr/local"
 COPY pyproject.toml uv.lock ./
 
 # Устанавливаем зависимости
-RUN uv sync --no-dev --no-install-project
+RUN uv sync --no-dev --no-install-project --frozen
 
 # Копируем код приложения
 COPY . .
@@ -16,4 +16,4 @@ COPY . .
 RUN mkdir -p /app/data
 
 # Запуск бота через модуль
-CMD ["uv", "run", "python", "-m", "app.main"]
+CMD ["python", "-m", "app.main"]
