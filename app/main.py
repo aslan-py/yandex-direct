@@ -1,5 +1,6 @@
 import asyncio
 import threading
+from typing import Any, Coroutine
 
 import telebot
 from loguru import logger
@@ -19,14 +20,15 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 loop = asyncio.new_event_loop()
 
 
-def _start_background_loop(l: asyncio.AbstractEventLoop) -> None:
+def _start_background_loop(event_loop: asyncio.AbstractEventLoop) -> None:
     """Запускает бесконечный цикл событий asyncio в отдельном потоке.
 
     Args:
-        l: Экземпляр цикла событий (Event Loop).
+        event_loop: Экземпляр цикла событий (Event Loop).
+
     """
-    asyncio.set_event_loop(l)
-    l.run_forever()
+    asyncio.set_event_loop(event_loop)
+    event_loop.run_forever()
 
 
 threading.Thread(
@@ -34,7 +36,7 @@ threading.Thread(
 ).start()
 
 
-def run_async(coro):
+def run_async(coro: Coroutine[Any, Any, Any]) -> Any:
     """Выполняет асинхронную корутину в фоновом цикле событий и ждет результат.
 
     Args:
@@ -42,16 +44,18 @@ def run_async(coro):
 
     Returns:
         Результат выполнения корутины.
+
     """
     return asyncio.run_coroutine_threadsafe(coro, loop).result()
 
 
-def track_message(chat_id: int, message_id: int):
+def track_message(chat_id: int, message_id: int) -> None:
     """Сохраняет ID сообщения в Redis для последующей очистки истории чата.
 
     Args:
         chat_id: ID чата Telegram.
         message_id: ID сообщения.
+
     """
     try:
         run_async(redis_client.lpush(f'messages:{chat_id}', message_id))
@@ -59,7 +63,9 @@ def track_message(chat_id: int, message_id: int):
         logger.error(f'Error tracking message: {e}')
 
 
-def send_tracked_message(chat_id: int, text: str, reply_markup=None, **kwargs):
+def send_tracked_message(
+    chat_id: int, text: str, reply_markup: Any = None, **kwargs: Any
+) -> Any:
     """Отправляет сообщение и регистрирует его ID в Redis для отслеживания.
 
     Args:
@@ -70,6 +76,7 @@ def send_tracked_message(chat_id: int, text: str, reply_markup=None, **kwargs):
 
     Returns:
         Объект отправленного сообщения.
+
     """
     msg = bot.send_message(chat_id, text, reply_markup=reply_markup, **kwargs)
     track_message(chat_id, msg.message_id)
@@ -82,16 +89,18 @@ def start_help(message: types.Message) -> None:
 
     Args:
         message: Объект сообщения от пользователя.
+
     """
     track_message(message.chat.id, message.message_id)
     show_main_menu(message.chat.id)
 
 
-def show_main_menu(chat_id: int):
+def show_main_menu(chat_id: int) -> None:
     """Отображает главное меню бота в виде Inline-кнопок.
 
     Args:
         chat_id: ID чата Telegram.
+
     """
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(
@@ -122,16 +131,18 @@ def cmd_login(message: types.Message) -> None:
 
     Args:
         message: Объект сообщения от пользователя.
+
     """
     track_message(message.chat.id, message.message_id)
     handle_login(message.chat.id)
 
 
-def handle_login(chat_id: int):
+def handle_login(chat_id: int) -> None:
     """Инициирует процесс OAuth-авторизации, отправляя ссылку пользователю.
 
     Args:
         chat_id: ID чата Telegram.
+
     """
     auth_link = yandex_auth.get_link()
     markup = types.InlineKeyboardMarkup()
@@ -149,6 +160,7 @@ def save_user_token(message: types.Message) -> None:
 
     Args:
         message: Объект сообщения, содержащий код.
+
     """
     track_message(message.chat.id, message.message_id)
     if not message.text:
@@ -182,18 +194,21 @@ def cmd_clear(message: types.Message) -> None:
 
     Args:
         message: Объект сообщения от пользователя.
+
     """
     track_message(message.chat.id, message.message_id)
     handle_clear(message.chat.id)
 
 
-def handle_clear(chat_id: int):
+def handle_clear(chat_id: int) -> None:
     """Удаляет все сообщения бота, ID которых были сохранены в Redis.
 
     Args:
         chat_id: ID чата Telegram.
+
     """
-    async def do_clear():
+
+    async def do_clear() -> None:
         msg_ids = await redis_client.lrange(f'messages:{chat_id}', 0, -1)
         logger.debug(
             f'Found {len(msg_ids)} messages to clear for chat {chat_id}'
@@ -217,11 +232,12 @@ def handle_clear(chat_id: int):
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('menu:'))
-def menu_callback(call: types.CallbackQuery):
+def menu_callback(call: types.CallbackQuery) -> None:
     """Маршрутизатор для действий главного меню.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     action = call.data.split(':')[1]
     try:
@@ -239,12 +255,14 @@ def menu_callback(call: types.CallbackQuery):
         show_accounts_for_check(call.message.chat.id)
 
 
-def show_delete_menu(chat_id: int):
+def show_delete_menu(chat_id: int) -> None:
     """Отображает список подключенных аккаунтов для их удаления.
 
     Args:
         chat_id: ID чата Telegram.
+
     """
+
     async def get_users() -> list[str]:
         async with async_session_factory() as session:
             return await user_repository.get_all_logins(session)
@@ -282,6 +300,7 @@ def confirm_delete(call: types.CallbackQuery) -> None:
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     login_name = call.data.split(':')[1]
 
@@ -304,12 +323,14 @@ def confirm_delete(call: types.CallbackQuery) -> None:
         bot.answer_callback_query(call.id, BotMessages.DELETE_ERROR.format(e))
 
 
-def show_accounts_for_check(chat_id: int):
+def show_accounts_for_check(chat_id: int) -> None:
     """Показывает список всех аккаунтов для запуска проверки ссылок.
 
     Args:
         chat_id: ID чата Telegram.
+
     """
+
     async def get_users() -> list[str]:
         async with async_session_factory() as session:
             return await user_repository.get_all_logins(session)
@@ -344,11 +365,12 @@ def show_accounts_for_check(chat_id: int):
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('chk_acc:'))
-def check_account_selected(call: types.CallbackQuery):
-    """Определяет роль выбранного аккаунта и переходит к выбору клиентов или кампаний.
+def check_account_selected(call: types.CallbackQuery) -> None:
+    """Определяет роль выбранного аккаунта.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     logger.debug(f'chk_acc triggered with: {call.data}')
     login = call.data.split(':')[1]
@@ -360,13 +382,12 @@ def check_account_selected(call: types.CallbackQuery):
         call.message.chat.id, call.message.message_id, reply_markup=None
     )
 
-    async def check_role_and_next():
+    async def check_role_and_next() -> str:
         async with async_session_factory() as session:
             user = await user_repository.get_user_by_login(session, login)
             if not user:
                 return 'error'
-            role = await yandex_auth.get_user_role(user.token, login)
-            return role
+            return await yandex_auth.get_user_role(user.token, login)
 
     role = run_async(check_role_and_next())
     if role == 'error':
@@ -379,15 +400,17 @@ def check_account_selected(call: types.CallbackQuery):
         show_campaigns(call.message.chat.id, login, login, page=0)
 
 
-def show_subclients(chat_id: int, login: str, page: int):
+def show_subclients(chat_id: int, login: str, page: int) -> None:
     """Отображает список субклиентов агентского аккаунта с пагинацией.
 
     Args:
         chat_id: ID чата Telegram.
         login: Логин агентства.
         page: Текущая страница.
+
     """
-    async def get_subs():
+
+    async def get_subs() -> None:
         async with async_session_factory() as session:
             user = await user_repository.get_user_by_login(session, login)
             return await yandex_auth.get_agency_clients(user.token, login)
@@ -457,11 +480,12 @@ def show_subclients(chat_id: int, login: str, page: int):
 @bot.callback_query_handler(
     func=lambda call: call.data.startswith('page_sub:')
 )
-def page_subclients(call: types.CallbackQuery):
+def page_subclients(call: types.CallbackQuery) -> None:
     """Обрабатывает переключение страниц списка субклиентов.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     _, login, page_str = call.data.split(':')
     try:
@@ -473,11 +497,12 @@ def page_subclients(call: types.CallbackQuery):
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('chk_sub:'))
-def subclient_selected(call: types.CallbackQuery):
+def subclient_selected(call: types.CallbackQuery) -> None:
     """Переходит к выбору кампаний для конкретного субклиента.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     _, login, subclient = call.data.split(':')
     try:
@@ -492,7 +517,7 @@ def subclient_selected(call: types.CallbackQuery):
 
 def show_campaigns(
     chat_id: int, login: str, subclient: str, page: int, msg_id: int = None
-):
+) -> None:
     """Отображает список активных кампаний клиента с возможностью выбора.
 
     Args:
@@ -501,8 +526,10 @@ def show_campaigns(
         subclient: Логин субклиента.
         page: Текущая страница.
         msg_id: ID сообщения для редактирования (опционально).
+
     """
-    async def get_camps():
+
+    async def get_camps() -> list[dict]:
         async with async_session_factory() as session:
             user = await user_repository.get_user_by_login(session, login)
             return await yandex_auth.get_active_campaigns(
@@ -535,7 +562,7 @@ def show_campaigns(
 
     selected_bytes = run_async(redis_client.smembers(state_key))
     selected = [int(x) for x in selected_bytes] if selected_bytes else []
-    
+
     logger.debug(f'show_campaigns: selected = {selected}')
 
     markup = types.InlineKeyboardMarkup(row_width=1)
@@ -609,11 +636,12 @@ def show_campaigns(
 @bot.callback_query_handler(
     func=lambda call: call.data.startswith('page_camp:')
 )
-def page_campaigns(call: types.CallbackQuery):
+def page_campaigns(call: types.CallbackQuery) -> None:
     """Обрабатывает переключение страниц списка кампаний.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     _, login, subclient, page_str = call.data.split(':')
     try:
@@ -627,18 +655,19 @@ def page_campaigns(call: types.CallbackQuery):
 @bot.callback_query_handler(
     func=lambda call: call.data.startswith('tgl_camp:')
 )
-def toggle_campaign(call: types.CallbackQuery):
+def toggle_campaign(call: types.CallbackQuery) -> None:
     """Переключает статус выбора кампании в Redis.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     logger.debug(f'tgl_camp triggered with: {call.data}')
     try:
         _, login, subclient, camp_id, page_str = call.data.split(':')
         state_key = f'state:{call.message.chat.id}:camps'
 
-        async def toggle():
+        async def toggle() -> None:
             is_member = await redis_client.sismember(state_key, camp_id)
             if is_member:
                 await redis_client.srem(state_key, camp_id)
@@ -664,11 +693,12 @@ def toggle_campaign(call: types.CallbackQuery):
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('back:'))
-def back_handler(call: types.CallbackQuery):
+def back_handler(call: types.CallbackQuery) -> None:
     """Обрабатывает нажатие кнопок 'Назад' на разных уровнях меню.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     data = call.data.split(':')
     try:
@@ -686,11 +716,12 @@ def back_handler(call: types.CallbackQuery):
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('run_'))
-def execute_check(call: types.CallbackQuery):
-    """Выполняет запуск проверки ссылок (всех аккаунтов, агентства или выбранных кампаний).
+def execute_check(call: types.CallbackQuery) -> None:
+    """Выполняет запуск проверки ссылок.
 
     Args:
         call: Объект обратного вызова (Callback Query).
+
     """
     logger.debug(f'execute_check triggered with: {call.data}')
     data = call.data.split(':')
@@ -710,7 +741,7 @@ def execute_check(call: types.CallbackQuery):
 
     progress_msg = send_tracked_message(chat_id, BotMessages.CHECK_START)
 
-    async def run_logic():
+    async def run_logic() -> str | None:
         try:
             async with async_session_factory() as session:
                 service = DirectService(session)
@@ -738,14 +769,14 @@ def execute_check(call: types.CallbackQuery):
                     login = data[1]
                     return await service.check_all_agency_clients(login)
 
-                elif action == 'run_all_cl':
+                if action == 'run_all_cl':
                     login = data[1]
                     subclient = data[2]
                     return await service.check_all_for_subclient(
                         login, subclient
                     )
 
-                elif action == 'run_sel':
+                if action == 'run_sel':
                     login = data[1]
                     subclient = data[2]
                     state_key = f'state:{chat_id}:camps'
@@ -781,6 +812,7 @@ def unknown_message(message: types.Message) -> None:
 
     Args:
         message: Объект сообщения от пользователя.
+
     """
     track_message(message.chat.id, message.message_id)
     show_main_menu(message.chat.id)

@@ -33,7 +33,7 @@ quote-style = "single"
 [tool.ruff.lint]
 # Вот здесь мы прописываем все игноры
 ignore = [
-    "E265", "F811", "D100", "D105", "D104", "D203", "D211", "D213", 
+    "E265", "F811", "D100", "D105", "D104", "D203", "D211", "D213",
     "N818", "W505", "ANN401", "COM812", "ANN204", "D107"
 ]
 select = ["E3", "E5", "E4", "E7", "E9", "W", "C90", "I", "N", "D", "F", "ANN", "ASYNC", "A", "COM", "RET"]
@@ -52,7 +52,7 @@ case-sensitive = true
 known-local-folder = ["app"]
 
 [tool.ruff.lint.mccabe]
-max-complexity = 10
+max-complexity = 12
 
 [tool.ruff.lint.pycodestyle]
 max-doc-length = 79

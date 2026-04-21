@@ -38,15 +38,9 @@ class YaSettings:
     """
 
     ADDS_URL = 'https://api.direct.yandex.com/json/v5/ads'
-    COPMPAIGNS_URL = (
-        'https://api.direct.yandex.com/json/v5/campaigns'
-    )
-    ADDS_GROUP = (
-        'https://api.direct.yandex.com/json/v5/adgroups'
-    )
-    FAST_LINKS = (
-        'https://api.direct.yandex.com/json/v5/sitelinks'
-    )
+    COPMPAIGNS_URL = 'https://api.direct.yandex.com/json/v5/campaigns'
+    ADDS_GROUP = 'https://api.direct.yandex.com/json/v5/adgroups'
+    FAST_LINKS = 'https://api.direct.yandex.com/json/v5/sitelinks'
     DATABASE_URL = os.getenv('DATABASE_UR')
 
     CLIENT_ID = os.getenv('CLIENT_ID')
@@ -116,8 +110,7 @@ class BotMessages:
     """
 
     HELP_TEXT = (
-        '🤖 **Главное меню**\n\n'
-        'Используйте кнопки ниже для управления ботом.'
+        '🤖 **Главное меню**\n\nИспользуйте кнопки ниже для управления ботом.'
     )
 
     MENU_LOGIN = '➕ Привязать аккаунт'
@@ -126,8 +119,7 @@ class BotMessages:
     MENU_CLEAR = '🧹 Очистить экран'
 
     LOGIN_START = (
-        'Перейдите по ссылке, нажмите «Разрешить» '
-        'и пришлите мне код:'
+        'Перейдите по ссылке, нажмите «Разрешить» и пришлите мне код:'
     )
     LOGIN_BTN = '🔐 Авторизоваться'
     LOGIN_SUCCESS = '✅ Аккаунт **{}** успешно привязан!'
@@ -141,14 +133,11 @@ class BotMessages:
 
     CHECK_START = '⏳ Начинаю сбор ссылок и проверку...'
     CHECK_ERROR = '❌ Ошибка выполнения: {}'
-    CHECK_NO_ACCOUNTS = (
-        'В базе пока нет аккаунтов. Привяжите новый аккаунт.'
-    )
+    CHECK_NO_ACCOUNTS = 'В базе пока нет аккаунтов. Привяжите новый аккаунт.'
 
     CHOOSE_ACCOUNT = 'Выбор аккаунта для проверки:'
     CHOOSE_SUBCLIENT = (
-        'Выберите суб-клиента для проверки '
-        '(или проверьте всех):'
+        'Выберите суб-клиента для проверки (или проверьте всех):'
     )
     CHECK_ALL_SUBCLIENTS = '🌐 Проверить всех клиентов'
 

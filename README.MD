@@ -39,6 +39,8 @@ venv\Scripts\activate  # Windows
 # Установка зависимостей
 pip install -r requirements.txt
 
+# Для корректно работы установить локально reddis через docker desktop
+
 # Запуск бота
 python -m app.main.py
 ```

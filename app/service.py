@@ -32,12 +32,11 @@ class UrlCheckerService:
         Args:
             limit: Максимальное число параллельных
                    HTTP-соединений (по умолчанию 10).
+
         """
         self.semaphore = asyncio.Semaphore(limit)
 
-    async def check_single_url(
-        self, url: str
-    ) -> Dict[str, Any]:
+    async def check_single_url(self, url: str) -> Dict[str, Any]:
         """Проверяет один URL на доступность (HTTP 200).
 
         Выполняет GET-запрос с таймаутом 8 секунд,
@@ -52,6 +51,7 @@ class UrlCheckerService:
             - url: исходный адрес;
             - status: HTTP-статус или строка 'Error';
             - is_ok: True только при статусе 200.
+
         """
         async with self.semaphore:
             try:
@@ -88,6 +88,7 @@ class UrlCheckerService:
         Returns:
             Список словарей с результатами проверки
             каждого уникального URL.
+
         """
         unique_urls = list(set(urls))
         tasks = [self.check_single_url(url) for url in unique_urls]
@@ -108,13 +109,12 @@ class DirectService:
         Args:
             db_session: Асинхронная сессия SQLAlchemy
                         для выполнения запросов к БД.
+
         """
         self.db = db_session
         self.checker = url_checker
 
-    async def register_user_by_code(
-        self, auth_code: str
-    ) -> str:
+    async def register_user_by_code(self, auth_code: str) -> str:
         """Регистрирует пользователя в БД по коду OAuth.
 
         Обменивает код на токен, получает логин
@@ -125,6 +125,7 @@ class DirectService:
 
         Returns:
             Логин зарегистрированного пользователя.
+
         """
         token = await yandex_auth.get_token_by_code(auth_code)
         login = await yandex_auth.get_passport_login(token)
@@ -136,6 +137,7 @@ class DirectService:
 
         Args:
             login: Логин пользователя для удаления.
+
         """
         await user_repository.delete_by_login(self.db, login)
 
@@ -158,6 +160,7 @@ class DirectService:
 
         Returns:
             Список всех найденных URL (с дубликатами).
+
         """
         if not campaign_ids:
             return []
@@ -165,10 +168,8 @@ class DirectService:
         all_urls: List[str] = []
         chunk_size = 10
         for i in range(0, len(campaign_ids), chunk_size):
-            chunk = campaign_ids[i: i + chunk_size]
-            ads = await yandex_auth.get_ads_data(
-                token, client_login, chunk
-            )
+            chunk = campaign_ids[i : i + chunk_size]
+            ads = await yandex_auth.get_ads_data(token, client_login, chunk)
 
             sitelink_ids: List[int] = []
             for ad in ads:
@@ -176,21 +177,15 @@ class DirectService:
                 if text_ad and text_ad.get('Href'):
                     all_urls.append(text_ad['Href'])
 
-                s_id = (
-                    text_ad.get('SitelinkSetId')
-                    if text_ad
-                    else None
-                )
+                s_id = text_ad.get('SitelinkSetId') if text_ad else None
                 if s_id:
                     sitelink_ids.append(s_id)
 
             if sitelink_ids:
-                sitelinks_data = (
-                    await yandex_auth.get_sitelinks_hrefs(
-                        token,
-                        client_login,
-                        list(set(sitelink_ids)),
-                    )
+                sitelinks_data = await yandex_auth.get_sitelinks_hrefs(
+                    token,
+                    client_login,
+                    list(set(sitelink_ids)),
                 )
                 for set_item in sitelinks_data:
                     for link in set_item.get('Sitelinks', []):
@@ -214,6 +209,7 @@ class DirectService:
 
         Returns:
             Форматированная строка отчёта в Markdown.
+
         """
         if not urls:
             return f'{report_title}: Ссылок не найдено.'
@@ -231,15 +227,10 @@ class DirectService:
         else:
             report += f'❌ Найдено ошибок: {len(bad_links)}\n\n'
             for link in bad_links[:15]:
-                report += (
-                    f'• {link["url"]} — '
-                    f'Статус: {link["status"]}\n'
-                )
+                report += f'• {link["url"]} — Статус: {link["status"]}\n'
 
             if len(bad_links) > 15:
-                report += (
-                    f'\n...и еще {len(bad_links) - 15} ошибок.'
-                )
+                report += f'\n...и еще {len(bad_links) - 15} ошибок.'
 
         return report
 
@@ -259,10 +250,9 @@ class DirectService:
 
         Returns:
             Текстовый отчёт в формате Markdown.
+
         """
-        user = await user_repository.get_user_by_login(
-            self.db, login
-        )
+        user = await user_repository.get_user_by_login(self.db, login)
         if not user:
             return f'Аккаунт {login} не найден в базе.'
 
@@ -275,9 +265,7 @@ class DirectService:
             if login != subclient_login
             else f'Отчет для {login}'
         )
-        return await self.check_urls_and_generate_report(
-            all_urls, title
-        )
+        return await self.check_urls_and_generate_report(all_urls, title)
 
     async def check_all_for_subclient(
         self, login: str, subclient_login: str
@@ -290,10 +278,9 @@ class DirectService:
 
         Returns:
             Текстовый отчёт в формате Markdown.
+
         """
-        user = await user_repository.get_user_by_login(
-            self.db, login
-        )
+        user = await user_repository.get_user_by_login(self.db, login)
         if not user:
             return f'Аккаунт {login} не найден в базе.'
 
@@ -311,13 +298,9 @@ class DirectService:
             if login != subclient_login
             else f'Отчет для {login}'
         )
-        return await self.check_urls_and_generate_report(
-            all_urls, title
-        )
+        return await self.check_urls_and_generate_report(all_urls, title)
 
-    async def check_all_agency_clients(
-        self, login: str
-    ) -> str:
+    async def check_all_agency_clients(self, login: str) -> str:
         """Проверяет всех активных субклиентов агентства.
 
         Собирает URL по всем субклиентам и кампаниям
@@ -328,23 +311,17 @@ class DirectService:
 
         Returns:
             Сводный текстовый отчёт в формате Markdown.
+
         """
-        user = await user_repository.get_user_by_login(
-            self.db, login
-        )
+        user = await user_repository.get_user_by_login(self.db, login)
         if not user:
             return f'Аккаунт {login} не найден в базе.'
 
         token = user.token
-        subclients = await yandex_auth.get_agency_clients(
-            token, login
-        )
+        subclients = await yandex_auth.get_agency_clients(token, login)
 
         if not subclients:
-            return (
-                f'Агентство {login}: '
-                'активных клиентов не найдено.'
-            )
+            return f'Агентство {login}: активных клиентов не найдено.'
 
         all_urls: List[str] = []
         for sub_login in subclients:
@@ -358,9 +335,7 @@ class DirectService:
             all_urls.extend(urls)
 
         title = f'Сводный отчет для агентства {login}'
-        return await self.check_urls_and_generate_report(
-            all_urls, title
-        )
+        return await self.check_urls_and_generate_report(all_urls, title)
 
 
 # Глобальный экземпляр для переиспользования лимита

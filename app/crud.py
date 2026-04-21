@@ -35,10 +35,9 @@ class UserRepository:
 
         Returns:
             Обновлённый или созданный объект User.
+
         """
-        result = await session.execute(
-            select(User).where(User.login == login)
-        )
+        result = await session.execute(select(User).where(User.login == login))
         user = result.scalar_one_or_none()
 
         if user:
@@ -64,10 +63,9 @@ class UserRepository:
 
         Returns:
             Объект User или None, если не найден.
+
         """
-        result = await session.execute(
-            select(User).where(User.login == login)
-        )
+        result = await session.execute(select(User).where(User.login == login))
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -79,23 +77,21 @@ class UserRepository:
 
         Returns:
             Список строк с логинами всех пользователей.
+
         """
         result = await session.execute(select(User))
         return [u.login for u in result.scalars().all()]
 
     @staticmethod
-    async def delete_by_login(
-        session: AsyncSession, login: str
-    ) -> None:
+    async def delete_by_login(session: AsyncSession, login: str) -> None:
         """Удаляет пользователя по его логину.
 
         Args:
             session: Асинхронная сессия SQLAlchemy.
             login: Логин пользователя для удаления.
+
         """
-        await session.execute(
-            delete(User).where(User.login == login)
-        )
+        await session.execute(delete(User).where(User.login == login))
         await session.commit()
 
 

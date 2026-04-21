@@ -34,10 +34,10 @@ class YandexDirectAuth:
         Returns:
             URL-строка для перехода пользователя
             на страницу авторизации Яндекс.
+
         """
         params = '&'.join([
-            f'{k}={v}'
-            for k, v in self.settings.GET_LINK_PARAMS.items()
+            f'{k}={v}' for k, v in self.settings.GET_LINK_PARAMS.items()
         ])
         return f'{self.settings.AUTH_URL}?{params}'
 
@@ -53,6 +53,7 @@ class YandexDirectAuth:
 
         Raises:
             Exception: Если API вернуло ошибку вместо токена.
+
         """
         data = self.settings.GET_TOKEN_PARAMS.copy()
         data['code'] = code
@@ -63,12 +64,8 @@ class YandexDirectAuth:
             ) as resp:
                 result = await resp.json()
                 if 'access_token' not in result:
-                    error_desc = result.get(
-                        'error_description', result
-                    )
-                    raise Exception(
-                        f'Ошибка получения токена: {error_desc}'
-                    )
+                    error_desc = result.get('error_description', result)
+                    raise Exception(f'Ошибка получения токена: {error_desc}')
                 return result['access_token']
 
     async def get_passport_login(self, token: str) -> str:
@@ -79,6 +76,7 @@ class YandexDirectAuth:
 
         Returns:
             Строка с логином пользователя Яндекс.
+
         """
         headers = {'Authorization': f'Bearer {token}'}
         async with aiohttp.ClientSession() as session:
@@ -102,6 +100,7 @@ class YandexDirectAuth:
 
         Returns:
             Словарь с полями клиента или пустой dict.
+
         """
         headers = {
             'Authorization': f'Bearer {token}',
@@ -111,9 +110,7 @@ class YandexDirectAuth:
         }
         payload = {
             'method': 'get',
-            'params': {
-                'FieldNames': ['Login', 'Type', 'ClientInfo']
-            },
+            'params': {'FieldNames': ['Login', 'Type', 'ClientInfo']},
         }
         async with aiohttp.ClientSession() as session:
             url = 'https://api.direct.yandex.com/json/v5/clients'
@@ -122,13 +119,9 @@ class YandexDirectAuth:
             ) as resp:
                 result = await resp.json()
                 if 'error' in result:
-                    logger.error(
-                        f'API Error (Clients): {result["error"]}'
-                    )
+                    logger.error(f'API Error (Clients): {result["error"]}')
                     return result
-                clients = (
-                    result.get('result', {}).get('Clients', [])
-                )
+                clients = result.get('result', {}).get('Clients', [])
                 return clients[0] if clients else {}
 
     async def get_user_role(self, token: str, login: str) -> str:
@@ -141,13 +134,12 @@ class YandexDirectAuth:
         Returns:
             Строка с ролью: 'AGENCY', 'CLIENT' и т.д.
             При ошибке возвращает 'UNKNOWN'.
+
         """
         info = await self.get_full_client_info(token, login)
         return info.get('Type', 'UNKNOWN')
 
-    async def get_agency_clients(
-        self, token: str, login: str
-    ) -> List[str]:
+    async def get_agency_clients(self, token: str, login: str) -> List[str]:
         """Получает список логинов суб-клиентов агентства.
 
         При ошибке кода 53/54 повторяет запрос без
@@ -159,6 +151,7 @@ class YandexDirectAuth:
 
         Returns:
             Список строк с логинами активных клиентов.
+
         """
         headers = {
             'Authorization': f'Bearer {token}',
@@ -175,10 +168,7 @@ class YandexDirectAuth:
         }
         logger.debug(f'Calling AgencyClients.get for {login}...')
         async with aiohttp.ClientSession() as session:
-            url = (
-                'https://api.direct.yandex.com'
-                '/json/v5/agencyclients'
-            )
+            url = 'https://api.direct.yandex.com/json/v5/agencyclients'
             async with session.post(
                 url, json=payload, headers=headers
             ) as resp:
@@ -195,9 +185,7 @@ class YandexDirectAuth:
                     else None
                 )
                 if err_code in (53, 54):
-                    logger.debug(
-                        'Retrying without Client-Login header...'
-                    )
+                    logger.debug('Retrying without Client-Login header...')
                     del headers['Client-Login']
                     async with session.post(
                         url, json=payload, headers=headers
@@ -210,25 +198,17 @@ class YandexDirectAuth:
 
                 if 'error' in result:
                     logger.error(
-                        'API Error (AgencyClients): '
-                        f'{result["error"]}'
+                        f'API Error (AgencyClients): {result["error"]}'
                     )
                     return []
 
-                clients = (
-                    result.get('result', {}).get('Clients', [])
-                )
+                clients = result.get('result', {}).get('Clients', [])
                 logger.debug(
-                    f'Found {len(clients)} agency clients'
-                    f' for {login}'
+                    f'Found {len(clients)} agency clients for {login}'
                 )
-                return [
-                    c['Login'] for c in clients if c.get('Login')
-                ]
+                return [c['Login'] for c in clients if c.get('Login')]
 
-    async def get_active_campaigns(
-        self, token: str, login: str
-    ) -> List[dict]:
+    async def get_active_campaigns(self, token: str, login: str) -> List[dict]:
         """Получает список активных кампаний (Id и Name).
 
         Запрашивает только кампании со статусом States=['ON'].
@@ -239,6 +219,7 @@ class YandexDirectAuth:
 
         Returns:
             Список словарей с полями Id и Name кампаний.
+
         """
         headers = {
             'Authorization': f'Bearer {token}',
@@ -266,16 +247,11 @@ class YandexDirectAuth:
                     f'{json.dumps(result, ensure_ascii=False)}'
                 )
                 if 'error' in result:
-                    logger.error(
-                        f'API Error (Campaigns): {result["error"]}'
-                    )
+                    logger.error(f'API Error (Campaigns): {result["error"]}')
                     return []
-                camps = (
-                    result.get('result', {}).get('Campaigns', [])
-                )
+                camps = result.get('result', {}).get('Campaigns', [])
                 logger.debug(
-                    f'Found {len(camps)} active campaigns'
-                    f' for {login}'
+                    f'Found {len(camps)} active campaigns for {login}'
                 )
                 return camps
 
@@ -294,6 +270,7 @@ class YandexDirectAuth:
 
         Returns:
             Список словарей с данными объявлений.
+
         """
         headers = {
             'Authorization': f'Bearer {token}',
@@ -306,9 +283,7 @@ class YandexDirectAuth:
         payload = json.loads(
             json.dumps(self.settings.GET_ADS_PAYLOAD_TEMPLATE)
         )
-        payload['params']['SelectionCriteria'][
-            'CampaignIds'
-        ] = campaign_ids
+        payload['params']['SelectionCriteria']['CampaignIds'] = campaign_ids
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -318,9 +293,7 @@ class YandexDirectAuth:
             ) as resp:
                 result = await resp.json()
                 if 'error' in result:
-                    logger.error(
-                        f'API Error (Ads): {result["error"]}'
-                    )
+                    logger.error(f'API Error (Ads): {result["error"]}')
                     return []
                 return result.get('result', {}).get('Ads', [])
 
@@ -340,6 +313,7 @@ class YandexDirectAuth:
         Returns:
             Список словарей с данными наборов сайтлинков.
             Возвращает пустой список при пустом вводе.
+
         """
         if not sitelink_set_ids:
             return []
@@ -352,13 +326,9 @@ class YandexDirectAuth:
         }
 
         payload = json.loads(
-            json.dumps(
-                self.settings.GET_SITELINKS_PAYLOAD_TEMPLATE
-            )
+            json.dumps(self.settings.GET_SITELINKS_PAYLOAD_TEMPLATE)
         )
-        payload['params']['SelectionCriteria'][
-            'Ids'
-        ] = sitelink_set_ids
+        payload['params']['SelectionCriteria']['Ids'] = sitelink_set_ids
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -368,13 +338,9 @@ class YandexDirectAuth:
             ) as resp:
                 result = await resp.json()
                 if 'error' in result:
-                    logger.error(
-                        f'API Error (Sitelinks): {result["error"]}'
-                    )
+                    logger.error(f'API Error (Sitelinks): {result["error"]}')
                     return []
-                return (
-                    result.get('result', {}).get('Sitelinks', [])
-                )
+                return result.get('result', {}).get('Sitelinks', [])
 
     async def get_sitelinks_hrefs(
         self,
@@ -394,10 +360,9 @@ class YandexDirectAuth:
 
         Returns:
             Результат вызова get_sitelinks.
+
         """
-        return await self.get_sitelinks(
-            token, login, sitelink_set_ids
-        )
+        return await self.get_sitelinks(token, login, sitelink_set_ids)
 
 
 # Экземпляр для импорта в другие модули
