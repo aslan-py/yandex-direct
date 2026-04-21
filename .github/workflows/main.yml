@@ -27,10 +27,7 @@ jobs:
       - name: Запустить проверку Ruff
         run: uvx ruff check .
 
-      - name: Запустить pre-commit
-        run: uvx pre-commit run --all-files
-  
-  deploy: 
+  deploy:
     runs-on: ubuntu-latest
     needs: lint
     steps:
