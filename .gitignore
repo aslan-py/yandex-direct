@@ -16,6 +16,7 @@ __pycache__/
 venv/
 env/
 ENV/
+.venv
 
 # IDE and editor files
 .ipynb_checkpoints/
@@ -33,3 +34,5 @@ direct_test.py
 
 # Jupyter notebooks checkpoints
 .ipynb_checkpoints/
+.ruff_cache
+.mypy_cache

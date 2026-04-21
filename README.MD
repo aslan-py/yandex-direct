@@ -40,125 +40,25 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 
 # Запуск бота
-python main.py
+python -m app.main.py
 ```
 
-## Запуск как сервис на сервере Linux
-```linux
-# Создайте сервисный файл
-sudo nano /etc/systemd/system/direct-bot.service
 
-[Unit]
-Description=Yandex Direct Checker Bot
-After=network.target
+## 💡 Использование
+Привязка: Нажмите «➕ Привязать аккаунт», перейдите по ссылке и разрешите доступ. Скопируйте код и отправьте его боту.
 
-[Service]
-Type=simple
-User=ubuntu
-WorkingDirectory=/path/to/your/bot
-ExecStart=/path/to/venv/bin/python main.py
-Restart=always
-RestartSec=10
+Выбор: В меню «🚀 Проверить ссылки» выберите нужный аккаунт.
 
-[Install]
-WantedBy=multi-user.target
+Для агентств: Бот предложит выбрать субклиента. Используйте стрелки для навигации, если клиентов много.
 
-# Запуск сервиса
-sudo systemctl daemon-reload
-sudo systemctl enable direct-bot
-sudo systemctl start direct-bot
-```
+Проверка: Отметьте нужные кампании (появится галочка ✅) и нажмите «Начать проверку».
 
-## Описание модулей и функций
-🔑 Модуль: token_and_login.py
-Назначение: Управление OAuth-авторизацией и работой с базой данных токенов.
+Результат: Бот пришлет подробный отчет со списком битых ссылок (если они есть) или подтвердит, что всё в порядке.
 
-Функции:
+## 👤 Автор
 
-- check_services_availability() -> tuple[bool, str]
-Проверяет доступность сервисов Яндекса перед началом авторизации
+* **Аслан Лигус** — *Идея и разработка* — [@Aslan_Ligus](https://t.me/Aslan_Ligus)
 
-- get_auth_link() -> tuple[bool, str]
-Генерирует URL для OAuth-авторизации пользователя в Яндекс
+## 📄 Лицензия
 
-- get_token_data(auth_code: str) -> tuple[bool, str]
-Обменивает код подтверждения на access token для API Яндекс.Директ
-
-- get_user_login(token: str) -> tuple[bool, str]
-Получает логин пользователя по OAuth токену
-
-- save_to_database(login, token) -> tuple[bool, str]
-Сохраняет или обновляет токен пользователя в SQLite базе данных
-
-🔧 Модуль: support_methods.py
-Назначение: Бизнес-логика работы с API Яндекс.Директ и проверки ссылок.
-
-Функции работы с БД:
-
-- initialize_database() -> bool
-Создает таблицу logins_tokens для хранения токенов пользователей
-
-- get_all_logins_and_tokens(DB: dict) -> tuple[bool, str]
-Загружает всех пользователей из БД в оперативную память для проверки
-
-Функции API Яндекс.Директ:
-
-- get_api_response(token: str, login: str) -> requests.Response | None
-Базовый запрос к API кампаний Яндекс.Директ
-
-- get_ads_api_response(token: str, login: str, campaign_ids: list)
-Получает объявления для списка кампаний (с разбивкой на чанки)
-
-- get_sitelinks_api_response(token: str, login: str, sitelink_set_id: list)
-Получает данные о быстрых ссылках (sitelinks)
-
-Функции проверки ответов:
-
-- check_response(response, login: str, api_type: str) -> tuple[bool, str]
-Валидирует ответы от API Яндекс.Директ
-
-- parse_companies_response(response_data, login: str, DB: dict)
-Извлекает ID активных кампаний (State = 'ON')
-
-- parse_ads_response(response_data, login: str, DB: dict)
-Извлекает данные объявлений и быстрых ссылок
-
-- parse_sitelinks_response(response_data, login: str, DB: dict)
-Извлекает URL быстрых ссылок из наборов
-
-Функции проверки URL:
-
-- check_url_status(urls, login, DB, url_type='ad') -> bool | str
-Проверяет доступность URL и формирует отчет (статус 200 = рабочий)
-
-Система логирования:
-
-- setup_logging()
-Настраивает систему логирования с ротацией файлов
-
-🤖 Модуль: main.py
-Назначение: Telegram бот - пользовательский интерфейс и координация процессов.
-
-Обработчики команд:
-
-- send_welcome(message) - команда /start
-Приветственное сообщение и описание возможностей бота
-
-- start_login(message) - команда /login
-Запускает процесс OAuth-авторизации в Яндекс.Директ
-
-- handle_auth_code(message)
-Обрабатывает код подтверждения от пользователя и сохраняет токен
-
-- start_check(message) - команда /go
-Запускает комплексную проверку Яндекс.Директ
-
-- delete_database(message) - команда /delete
-Удаляет базу данных с подтверждением пользователя
-
-Основной процесс проверки:
-
-- run_direct_check(chat_id)
-Выполняет полный цикл проверки: загрузка пользователей → получение кампаний → получение объявлений → проверка быстрых ссылок → проверка URL → формирование отчета
-
-- :)
+Этот проект распространяется под лицензией MIT — подробности см. в файле [LICENSE](LICENSE).

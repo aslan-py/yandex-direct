@@ -1,0 +1,29 @@
+# Секреты и докер
+.env
+docker-compose*
+.dockerignore
+
+# Git и инструменты
+.git
+.gitignore
+.pre-commit-config*
+
+# Python
+**/__pycache__
+*.py[cod]
+.venv
+venv
+.ruff_cache
+.mypy_cache
+
+# Твои файлы
+tests/
+*.db
+*.sqlite*
+.VSCodeCounter/
+LICENSE
+gg.py
+ruff.toml
+.github/
+.ruff_cache
+.mypy_cache
